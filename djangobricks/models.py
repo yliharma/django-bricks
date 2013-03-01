@@ -105,14 +105,16 @@ class ListBrick(BaseBrick):
 class BaseWall(object):
     """Manager for a list of bricks.
     
+    It orders a list of bricks using the given criteria and can be sliced or
+    iterated.
     """
     
-    def __init__(self, nodes, criteria=[]):
-        self.nodes = nodes
+    def __init__(self, bricks, criteria=[]):
+        self.bricks = bricks
         self.criteria = criteria
     
     def __getitem__(self, key):
-        return self.nodes[key]
+        return self.sorted()[key]
     
     def __iter__(self):
         return iter(self.sorted())
@@ -135,6 +137,6 @@ class BaseWall(object):
     
     def sorted(self):
         if not hasattr(self, '_sorted'):
-            self._sorted = sorted(self.nodes, cmp=self._cmp)
+            self._sorted = sorted(self.bricks, cmp=self._cmp)
         return self._sorted
     

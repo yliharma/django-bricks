@@ -104,6 +104,22 @@ class BrickTest(unittest.TestCase):
         for i in range(1, 3):
             self.bricks.append(getattr(self, 'brickC%s' % i))
     
+    # Slicing and iteration
+    
+    def test_slicing(self):
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks)
+        self.assertEqual(wall[0], self.brickA1)
+        self.assertEqual(wall[:1], [self.brickA1])
+    
+    def test_iteration(self):
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks)
+        i = 1
+        for brick in wall:
+            self.assertEqual(brick, getattr(self, 'brickA%s' % i))
+            i += 1
+    
     # Single keys - Single bricks- Single models
     
     def test_single_key_desc_sorting_single_bricks_single_models(self):
@@ -271,3 +287,4 @@ class BrickTest(unittest.TestCase):
                     self.brickB1, self.brickB2, self.brickB4,
                     self.brickA1, self.brickA2, self.brickA4]
         self.assertEqual(wall.sorted(), expected)
+    
