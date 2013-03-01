@@ -107,6 +107,23 @@ class BaseWall(object):
     
     It orders a list of bricks using the given criteria and can be sliced or
     iterated.
+    
+    Sample usage:
+    
+    class MyBrickWall(BaseWall):
+        ...
+    
+    bricks = [SingleBrick(i) for i in MyObject.objects.all()]
+    bricks.extend([SingleBrick(i) for i in MyOtherObject.objects.all()])
+    
+    wall = MyBrickWall(bricks, criteria=(
+        (Criterion('is_sticky'), SORTING_DESC),
+        (Criterion('popularity'), SORTING_DESC),
+    ))
+    
+    for brick in wall:
+        do_something(brick)
+    
     """
     
     def __init__(self, bricks, criteria=[]):

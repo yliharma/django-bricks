@@ -5,10 +5,6 @@ from django.db import models
 
 from .models import *
 
-pub_date_criterion = Criterion('pub_date', callback=min)
-popularity_criterion = Criterion('popularity', callback=max)
-is_sticky_criterion = Criterion('is_sticky', callback=None, default=False)
-
 
 class TestBrickWall(BaseWall):
     pass
