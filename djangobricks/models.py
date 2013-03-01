@@ -61,14 +61,20 @@ class BaseBrick(object):
     template_name = '' # Deve essere una stringa
     
     def get_attr_for_criterion(self, criterion):
+        """Returns the criterion attribute for this brick."""
+        raise NotImplemented
+    
+    @classmethod
+    def get_bricks_for_queryset(cls, queryset):
+        """Returns a list of bricks from the given queryset."""
         raise NotImplemented
     
     def get_context(self):
-        """Restituisce il contesto da passare al template per il rendering."""
+        """Context for template (TODO)."""
         return {}
     
     def render(self):
-        """Restituisce il frammento html che rappresenta il nodo."""
+        """HTML for the brick (TODO)."""
         template = loader.get_template(self.template_name)
         content = template.render(self.get_context())
         return content
@@ -85,6 +91,10 @@ class SingleBrick(BaseBrick):
     def get_attr_for_criterion(self, criterion):
         return criterion.get_for_item(self.item)
     
+    @classmethod
+    def get_bricks_for_queryset(cls, queryset):
+        return [cls(i) for i in queryset]
+    
 
 class ListBrick(BaseBrick):
     """Brick for a list of objects."""
@@ -96,6 +106,10 @@ class ListBrick(BaseBrick):
     
     def get_attr_for_criterion(self, criterion):
         return criterion.get_for_item_list(self.items)
+    
+    @classmethod
+    def get_bricks_for_queryset(cls, queryset):
+        return [cls(list(queryset))]
     
 
 # ---------------------------------------------------------------------------
@@ -113,12 +127,12 @@ class BaseWall(object):
     class MyBrickWall(BaseWall):
         ...
     
-    bricks = [SingleBrick(i) for i in MyObject.objects.all()]
-    bricks.extend([SingleBrick(i) for i in MyOtherObject.objects.all()])
+    bricks = SingleBrick.get_for_queryset(MyObject.objects.all())
+    bricks.extend(ListBrick.get_for_queryset(MyOtherObject.objects.all())
     
     wall = MyBrickWall(bricks, criteria=(
-        (Criterion('is_sticky'), SORTING_DESC),
-        (Criterion('popularity'), SORTING_DESC),
+        (Criterion('is_sticky', callback=min, SORTING_DESC),
+        (Criterion('popularity', SORTING_DESC),
     ))
     
     for brick in wall:

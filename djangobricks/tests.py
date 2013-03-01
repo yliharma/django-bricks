@@ -45,11 +45,9 @@ class BrickTest(unittest.TestCase):
     def setUp(self):
         self.bricks = []
     
-    # def tearDown(self):
-    #     TestModelA.objects.all().delete()
-    #     for i in range(1, 5):
-    #         setattr(self, 'brick%s' % i, None)
-    #     self.bricks = []
+    def tearDown(self):
+        TestModelA.objects.all().delete()
+        self.bricks = []
     
     def _create_model_a_objects_and_bricks(self):
         objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
@@ -115,6 +113,41 @@ class BrickTest(unittest.TestCase):
         for brick in wall:
             self.assertEqual(brick, getattr(self, 'brickA%s' % i))
             i += 1
+    
+    # Instantiation
+    
+    def test_single_brick_init(self):
+        """docstring for test_single_brick_init"""
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
+            pub_date=datetime.datetime(2011, 1, 1, 12, 0), is_sticky=False)
+        objectA3 = TestModelA.objects.create(name='objectA3', popularity=3,
+            pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
+        objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
+            pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
+        
+        bricks = SingleBrick.get_bricks_for_queryset(TestModelA.objects.all())
+        wall = TestBrickWall(bricks)
+        self.assertEqual(wall[0].item, objectA1)
+        self.assertEqual(wall[1].item, objectA2)
+        self.assertEqual(wall[2].item, objectA3)
+        self.assertEqual(wall[3].item, objectA4)
+    
+    def test_list_brick_init(self):
+        """docstring for test_single_brick_init"""
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
+            pub_date=datetime.datetime(2011, 1, 1, 12, 0), is_sticky=False)
+        objectA3 = TestModelA.objects.create(name='objectA3', popularity=3,
+            pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
+        objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
+            pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
+        
+        bricks = ListBrick.get_bricks_for_queryset(TestModelA.objects.all())
+        wall = TestBrickWall(bricks)
+        self.assertEqual(wall[0].items, [objectA1, objectA2, objectA3, objectA4])
     
     # Single keys - Single bricks- Single models
     
