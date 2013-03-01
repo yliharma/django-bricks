@@ -3,34 +3,51 @@ from operator import attrgetter, itemgetter
 
 from django.template import loader
 
-from .settings import SORTING_ASC, SORTING_DESC
+SORTING_ASC = 1
+SORTING_DESC = -1
 
 # ---------------------------------------------------------------------------
 # Criterion
 # ---------------------------------------------------------------------------
 
 class Criterion(object):
-    """
+    """A criterion works as a sorting key for a BaseWall subclass.
+    
+    Functionally it is a proxy to a property of a Brick, whether it is has
+    a single item or a list.
+    
+    Params:
+    - attrname: the name of the attribute to retrieve
+    - callback: a function that receives an item list and returns a
+                single value for the attrname
+    - default: the value to return when the item doesn't have the
+               attribute or the callback is None
     """
     
-    def __init__(self, attr_name, list_callback=None, default_value=None):
-        self.attr_name = attr_name
-        self.list_callback = list_callback
-        self.default_value = default_value
+    def __init__(self, attrname, callback=None, default=None):
+        self.attrname = attrname
+        self.callback = callback
+        self.default = default
     
     def __repr__(self):
-        """docstring for __repr__"""
-        return self.attr_name
+        return self.attrname
     
     def get_for_item(self, item):
-        """docstring for get_for_item"""
-        return getattr(item, self.attr_name, self.default_value)
+        """
+        Returns the value of the `attrname` for the item, or the `default`
+        if the item doesn't have the attribute.
+        """
+        return getattr(item, self.attrname, self.default)
     
     def get_for_item_list(self, items):
-        """docstring for get_for_item_list"""
-        if self.list_callback is None:
-            return self.default_value
-        return self.list_callback((getattr(i, self.attr_name) for i in items))
+        """
+        If the criterion has a callable `callback`, passes the item list
+        to it and returns the value of the `attrname` for the item list, 
+        otherwise returns the `default`.
+        """
+        if self.callback is None or not callable(self.callback):
+            return self.default
+        return self.callback((getattr(i, self.attrname, self.default) for i in items))
     
 
 # ---------------------------------------------------------------------------
@@ -38,8 +55,7 @@ class Criterion(object):
 # ---------------------------------------------------------------------------
 
 class BaseBrick(object):
-    """
-    Classe base per un nodo.
+    """Base class for a brick.
     """
     
     template_name = '' # Deve essere una stringa
@@ -71,7 +87,7 @@ class SingleBrick(BaseBrick):
     
 
 class ListBrick(BaseBrick):
-    """Brick for a list of object."""
+    """Brick for a list of objects."""
     def __init__(self, items):
         self.items = items
     
@@ -86,8 +102,8 @@ class ListBrick(BaseBrick):
 # Brick Manager
 # ---------------------------------------------------------------------------
 
-class BaseBrickManager(object):
-    """Classe base per la gestione di una lista di nodi.
+class BaseWall(object):
+    """Manager for a list of bricks.
     
     """
     
