@@ -2,7 +2,7 @@ import os
 from distutils.core import setup
 
 APP_NAME = 'djangobricks'
-PACKAGES = ['%s.templaetags',]
+PACKAGES = ['%s.templatetags',]
 
 root_dir = os.path.dirname(__file__)
 if root_dir:
