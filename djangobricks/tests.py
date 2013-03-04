@@ -6,6 +6,9 @@ from django.db import models
 from .models import *
 
 
+def default():
+    return 1
+
 class TestBrickWall(BaseWall):
     pass
     
@@ -18,6 +21,9 @@ class TestModelA(models.Model):
     
     def __unicode__(self):
         return unicode(self.name)
+    
+    def callable_popularity(self):
+        return self.popularity
     
 
 class TestModelB(models.Model):
@@ -117,7 +123,6 @@ class BrickTest(unittest.TestCase):
     # Instantiation
     
     def test_single_brick_init(self):
-        """docstring for test_single_brick_init"""
         objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
             pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
         objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
@@ -135,7 +140,6 @@ class BrickTest(unittest.TestCase):
         self.assertEqual(wall[3].item, objectA4)
     
     def test_list_brick_init(self):
-        """docstring for test_single_brick_init"""
         objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
             pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
         objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
@@ -148,6 +152,38 @@ class BrickTest(unittest.TestCase):
         bricks = ListBrick.get_bricks_for_queryset(TestModelA.objects.all())
         wall = TestBrickWall(bricks)
         self.assertEqual(wall[0].items, [objectA1, objectA2, objectA3, objectA4])
+    
+    # Callable criterion
+    
+    def test_callable_criterion(self):
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        criterion = Criterion('callable_popularity')
+        self.assertEqual(criterion.get_for_item(objectA1), 5)
+    
+    def test_callable_criterion_in_wall(self):
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('callable_popularity'), SORTING_DESC),
+        ))
+        expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
+        self.assertEqual(wall.sorted(), expected)
+    
+    # Callable default criterion
+    
+    def test_callable_default_criterion(self):
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        criterion = Criterion('i_dont_exist', default=default)
+        self.assertEqual(criterion.get_for_item(objectA1), 1)
+    
+    def test_callable_default_criterion_in_wall(self):
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('i_dont_exist', default=default), SORTING_DESC),
+        ))
+        expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
+        self.assertEqual(wall.sorted(), expected)
     
     # Single keys - Single bricks- Single models
     

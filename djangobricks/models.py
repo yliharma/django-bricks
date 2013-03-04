@@ -17,11 +17,13 @@ class Criterion(object):
     a single item or a list.
     
     Params:
-    - attrname: the name of the attribute to retrieve
+    - attrname: the name of the attribute to retrieve. Can be a callable that
+                takes no argument.
     - callback: a function that receives an item list and returns a
-                single value for the attrname
+                single value for the attrname.
     - default: the value to return when the item doesn't have the
-               attribute or the callback is None
+               attribute or the callback is None. Can be a callable that
+               takes no argument.
     """
     
     def __init__(self, attrname, callback=None, default=None):
@@ -37,7 +39,10 @@ class Criterion(object):
         Returns the value of the `attrname` for the item, or the `default`
         if the item doesn't have the attribute.
         """
-        return getattr(item, self.attrname, self.default)
+        attrvalue = getattr(item, self.attrname, self.default)
+        if callable(attrvalue):
+            return attrvalue()
+        return attrvalue
     
     def get_for_item_list(self, items):
         """
@@ -46,8 +51,8 @@ class Criterion(object):
         otherwise returns the `default`.
         """
         if self.callback is None or not callable(self.callback):
-            return self.default
-        return self.callback((getattr(i, self.attrname, self.default) for i in items))
+            return callable(self.default) and self.default() or self.default
+        return self.callback((self.get_for_item(i) for i in items))
     
 
 # ---------------------------------------------------------------------------
@@ -58,7 +63,7 @@ class BaseBrick(object):
     """Base class for a brick.
     """
     
-    template_name = '' # Deve essere una stringa
+    template_name = None
     
     def get_attr_for_criterion(self, criterion):
         """Returns the criterion attribute for this brick."""
