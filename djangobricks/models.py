@@ -65,6 +65,8 @@ class BaseBrick(object):
     A brick is a container for a single Django model instance or a list of
     instances. Subclasses should extend one of the two provided subclasses
     that implement those two use cases.
+    
+    Also, a brick knows how to render itself.
     """
     
     template_name = None
@@ -79,11 +81,14 @@ class BaseBrick(object):
         raise NotImplemented
     
     def get_context(self):
-        """Context for template (TODO)."""
-        return {}
+        """Returns the context to be passed on to the template."""
+        return None
     
     def render(self):
-        """HTML for the brick (TODO)."""
+        """
+        Returns the rendered template for the brick.
+        Can raise a TemplateDoesNotExist exception.
+        """
         template = loader.get_template(self.template_name)
         content = template.render(self.get_context())
         return content
