@@ -61,6 +61,10 @@ class Criterion(object):
 
 class BaseBrick(object):
     """Base class for a brick.
+    
+    A brick is a container for a single Django model instance or a list of
+    instances. Subclasses should extend one of the two provided subclasses
+    that implement those two use cases.
     """
     
     template_name = None
@@ -98,6 +102,7 @@ class SingleBrick(BaseBrick):
     
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
+        """Returns a list of bricks, one for each object in the queryset."""
         return [cls(i) for i in queryset]
     
 
@@ -114,6 +119,11 @@ class ListBrick(BaseBrick):
     
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
+        """
+        Return a list with a single brick containing all the object in the
+        queryset. Subclasses might want to override this method for a more
+        sophisticated implementation.
+        """
         return [cls(list(queryset))]
     
 
