@@ -110,6 +110,14 @@ class SingleBrick(BaseBrick):
         """Returns a list of bricks, one for each object in the queryset."""
         return [cls(i) for i in queryset]
     
+    def get_context(self):
+        """
+        Returns the context to be passed on to the template.
+        By default, it returns a dictionary with an 'object' key and the item
+        as the value.
+        """
+        return {'object': self.item}
+    
 
 class ListBrick(BaseBrick):
     """Brick for a list of objects."""
@@ -130,6 +138,14 @@ class ListBrick(BaseBrick):
         sophisticated implementation.
         """
         return [cls(list(queryset))]
+    
+    def get_context(self):
+        """
+        Returns the context to be passed on to the template.
+        By default, it returns a dictionary with an 'object_list' key and the 
+        items as the value.
+        """
+        return {'object_list': self.items}
     
 
 # ---------------------------------------------------------------------------
