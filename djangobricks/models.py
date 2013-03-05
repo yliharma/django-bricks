@@ -163,12 +163,12 @@ class BaseWall(object):
     class MyBrickWall(BaseWall):
         ...
     
-    bricks = SingleBrick.get_for_queryset(MyObject.objects.all())
-    bricks.extend(ListBrick.get_for_queryset(MyOtherObject.objects.all())
+    bricks = SingleBrick.get_bricks_for_queryset(MyObject.objects.all())
+    bricks.extend(ListBrick.get_bricks_for_queryset(MyOtherObject.objects.all())
     
     wall = MyBrickWall(bricks, criteria=(
-        (Criterion('is_sticky', callback=min, SORTING_DESC),
-        (Criterion('popularity', SORTING_DESC),
+        (Criterion('pub_date', callback=max), SORTING_DESC),
+        (Criterion('popularity', callback=max), SORTING_DESC),
     ))
     
     for brick in wall:
