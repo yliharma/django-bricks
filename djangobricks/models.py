@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from operator import attrgetter, itemgetter
 
-from django.template import loader
+from django.template import loader, Context
 
 SORTING_ASC = 1
 SORTING_DESC = -1
@@ -82,7 +82,7 @@ class BaseBrick(object):
     
     def get_context(self):
         """Returns the context to be passed on to the template."""
-        return None
+        return Context()
     
     def render(self):
         """
@@ -116,7 +116,7 @@ class SingleBrick(BaseBrick):
         By default, it returns a dictionary with an 'object' key and the item
         as the value.
         """
-        return {'object': self.item}
+        return Context({'object': self.item})
     
 
 class ListBrick(BaseBrick):
@@ -145,7 +145,7 @@ class ListBrick(BaseBrick):
         By default, it returns a dictionary with an 'object_list' key and the 
         items as the value.
         """
-        return {'object_list': self.items}
+        return Context({'object_list': self.items})
     
 
 # ---------------------------------------------------------------------------
