@@ -186,6 +186,9 @@ class BaseWall(object):
     def __iter__(self):
         return iter(self.sorted())
     
+    def __len__(self):
+        return len(self.bricks)
+    
     def _cmp(self, left, right):
         """
         # Courtesy of:

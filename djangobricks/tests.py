@@ -104,7 +104,7 @@ class BrickTest(unittest.TestCase):
         for i in range(1, 3):
             self.bricks.append(getattr(self, 'brickC%s' % i))
     
-    # Slicing and iteration
+    # Slicing, iteration, length
     
     def test_slicing(self):
         self._create_model_a_objects_and_bricks()
@@ -119,6 +119,11 @@ class BrickTest(unittest.TestCase):
         for brick in wall:
             self.assertEqual(brick, getattr(self, 'brickA%s' % i))
             i += 1
+    
+    def test_length(self):
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks)
+        self.assertEqual(len(wall), 4)
     
     # Instantiation
     
