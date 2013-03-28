@@ -194,11 +194,8 @@ class BaseWall(object):
         # Courtesy of:
         # http://stackoverflow.com/questions/1143671/python-sorting-list-of-dictionaries-by-multiple-keys
         """
-        comparers = (
-            (attrgetter('get_attr_for_criterion'), criterion, sorting_order) 
-            for criterion, sorting_order in self.criteria
-        )
-        for fn, criterion, sorting_order in comparers:
+        fn = attrgetter('get_attr_for_criterion')
+        for criterion, sorting_order in self.criteria:
             result = cmp(fn(left)(criterion), fn(right)(criterion))
             if result:
                 return sorting_order * result
