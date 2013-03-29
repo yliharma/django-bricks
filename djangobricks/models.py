@@ -52,7 +52,12 @@ class Criterion(object):
         """
         if self.callback is None or not callable(self.callback):
             return callable(self.default) and self.default() or self.default
-        return self.callback((self.get_for_item(i) for i in items))
+        if items:
+            # This is needed to avoid ValueError for some callback that can
+            # not receive an empty list, like max()
+            return self.callback((self.get_for_item(i) for i in items))
+        else:
+            return callable(self.default) and self.default() or self.default
     
 
 # ---------------------------------------------------------------------------
