@@ -89,13 +89,15 @@ class BaseBrick(object):
         """Returns the context to be passed on to the template."""
         return Context()
     
-    def render(self):
+    def render(self, **extra_context):
         """
         Returns the rendered template for the brick.
         Can raise a TemplateDoesNotExist exception.
         """
         template = loader.get_template(self.template_name)
-        content = template.render(self.get_context())
+        context = self.get_context()
+        context.update(extra_context)
+        content = template.render(context)
         return content
     
 
