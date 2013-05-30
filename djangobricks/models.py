@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from operator import attrgetter, itemgetter
+from operator import attrgetter
 
 from django.template import loader, Context
 
@@ -195,6 +195,14 @@ class BaseWall(object):
     
     def __len__(self):
         return len(self.bricks)
+    
+    def __getstate__(self):
+        # We save the sorted bricks and delete che criteria
+        # as those might not be pickable
+        obj_dict = self.__dict__.copy()
+        obj_dict['_sorted'] = self.sorted()
+        del obj_dict['criteria']
+        return obj_dict
     
     def _cmp(self, left, right):
         """

@@ -330,7 +330,7 @@ class BrickTest(unittest.TestCase):
     
     # Multi keys - Mixed bricks - Multi models
     
-    def test_multi_key_1_sorting_multi_bricks_single_models(self):
+    def test_multi_key_1_sorting_multi_bricks_multi_models(self):
         self._create_model_a_objects_and_bricks()
         self._create_model_b_objects_and_bricks()
         self._create_model_c_objects_and_bricks()
@@ -344,7 +344,7 @@ class BrickTest(unittest.TestCase):
                     self.brickC2, self.brickC1]
         self.assertEqual(wall.sorted(), expected)
     
-    def test_multi_key_2_sorting_multi_bricks_single_models(self):
+    def test_multi_key_2_sorting_multi_bricks_multi_models(self):
         self._create_model_a_objects_and_bricks()
         self._create_model_b_objects_and_bricks()
         self._create_model_c_objects_and_bricks()
@@ -357,4 +357,17 @@ class BrickTest(unittest.TestCase):
                     self.brickB1, self.brickB2, self.brickB4,
                     self.brickA1, self.brickA2, self.brickA4]
         self.assertEqual(wall.sorted(), expected)
+    
+    # Pickle
+    
+    def test_pickle(self):
+        import pickle
+        import datetime
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('is_sticky', default=datetime.datetime.now), SORTING_DESC),
+        ))
+        pickled = pickle.dumps(wall)
+        unpickled = pickle.loads(pickled)
+        self.assertListEqual([i.item for i in wall.sorted()], [i.item for i in unpickled.sorted()])
     
