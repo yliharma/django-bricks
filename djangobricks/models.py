@@ -114,8 +114,11 @@ class SingleBrick(BaseBrick):
     
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
-        """Returns a list of bricks, one for each object in the queryset."""
-        return [cls(i) for i in queryset]
+        """
+        Returns an iterator over the bricks, one for each object in the
+        queryset.
+        """
+        return (cls(i) for i in queryset)
     
     def get_context(self):
         """
