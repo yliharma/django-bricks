@@ -1,4 +1,5 @@
 from django import template
+from django.template.loader import render_to_string
 
 register = template.Library()
 
@@ -12,15 +13,13 @@ def render_brick(context, brick, **extra_context):
     The method accepts keyword arguments that will be passed as extra context
     to the brick.
     """
-    request = context.pop('request', None)
+    request = context.get('request')
+
     if request is not None:
         context_instance = template.RequestContext(request)
     else:
-        context_instance = template.Context()
-    context_instance.update(brick.get_context())
-    context_instance.update(extra_context)
-    t = template.loader.get_template(brick.template_name)
-    try:
-        return t.render(context_instance)
-    finally:
-        context_instance.pop()
+        context_instance = None
+
+    dictionary = brick.get_context()
+    dictionary.update(extra_context)
+    return render_to_string(brick.template_name, dictionary, context_instance)
