@@ -28,13 +28,15 @@ class TestModelA(models.Model):
 
 class TestModelB(models.Model):
     name = models.CharField(max_length=8)
-    pub_date = models.DateTimeField()
+    date_add = models.DateTimeField()
     popularity = models.PositiveIntegerField()
     is_sticky = models.BooleanField()
     
     def __unicode__(self):
         return unicode(self.name)
-    
+
+    def pub_date(self):
+        return self.date_add
 
 class TestModelC(models.Model):
     name = models.CharField(max_length=8)
@@ -44,7 +46,7 @@ class TestModelC(models.Model):
     
     def __unicode__(self):
         return unicode(self.name)
-    
+
 
 class BrickTest(unittest.TestCase):
 
@@ -53,6 +55,8 @@ class BrickTest(unittest.TestCase):
     
     def tearDown(self):
         TestModelA.objects.all().delete()
+        TestModelB.objects.all().delete()
+        TestModelC.objects.all().delete()
         self.bricks = []
     
     def _create_model_a_objects_and_bricks(self):
@@ -74,13 +78,13 @@ class BrickTest(unittest.TestCase):
     
     def _create_model_b_objects_and_bricks(self):
         objectB1 = TestModelB.objects.create(name='objectB1', popularity=10,
-            pub_date=datetime.datetime(2006, 1, 1, 12, 0), is_sticky=False)
+            date_add=datetime.datetime(2006, 1, 1, 12, 0), is_sticky=False)
         objectB2 = TestModelB.objects.create(name='objectB2', popularity=9,
-            pub_date=datetime.datetime(2007, 1, 1, 12, 0), is_sticky=False)
+            date_add=datetime.datetime(2007, 1, 1, 12, 0), is_sticky=False)
         objectB3 = TestModelB.objects.create(name='objectB3', popularity=8,
-            pub_date=datetime.datetime(2008, 1, 1, 12, 0), is_sticky=True)
+            date_add=datetime.datetime(2008, 1, 1, 12, 0), is_sticky=True)
         objectB4 = TestModelB.objects.create(name='objectB4', popularity=7,
-            pub_date=datetime.datetime(2009, 1, 1, 12, 0), is_sticky=False)
+            date_add=datetime.datetime(2009, 1, 1, 12, 0), is_sticky=False)
         
         self.brickB1 = SingleBrick(objectB1)
         self.brickB2 = SingleBrick(objectB2)
@@ -103,7 +107,7 @@ class BrickTest(unittest.TestCase):
         self.brickC2 = ListBrick([objectC3, objectC4])
         for i in range(1, 3):
             self.bricks.append(getattr(self, 'brickC%s' % i))
-    
+
     # Slicing, iteration, length
     
     def test_slicing(self):
@@ -111,15 +115,15 @@ class BrickTest(unittest.TestCase):
         wall = TestBrickWall(self.bricks)
         self.assertEqual(wall[0], self.brickA1)
         self.assertEqual(wall[:1], [self.brickA1])
+        self.assertEqual(wall[1:3], [self.brickA2, self.brickA3])
     
     def test_iteration(self):
         self._create_model_a_objects_and_bricks()
         wall = TestBrickWall(self.bricks)
-        i = 1
-        for brick in wall:
-            self.assertEqual(brick, getattr(self, 'brickA%s' % i))
+        for i, brick in enumerate(wall):
             i += 1
-    
+            self.assertEqual(brick, getattr(self, 'brickA%s' % i))
+
     def test_length(self):
         self._create_model_a_objects_and_bricks()
         wall = TestBrickWall(self.bricks)
@@ -157,14 +161,22 @@ class BrickTest(unittest.TestCase):
         bricks = ListBrick.get_bricks_for_queryset(TestModelA.objects.all())
         wall = TestBrickWall(bricks)
         self.assertEqual(wall[0].items, [objectA1, objectA2, objectA3, objectA4])
-    
+
+    # Missing criterion attribute
+
+    def test_missing_criterion_attribute(self):
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        criterion = Criterion('i_dont_exist')
+        self.assertIsNone(criterion.get_value_for_item(objectA1))
+
     # Callable criterion
     
     def test_callable_criterion(self):
         objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
             pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
         criterion = Criterion('callable_popularity')
-        self.assertEqual(criterion.get_for_item(objectA1), 5)
+        self.assertEqual(criterion.get_value_for_item(objectA1), 5)
     
     def test_callable_criterion_in_wall(self):
         self._create_model_a_objects_and_bricks()
@@ -175,12 +187,12 @@ class BrickTest(unittest.TestCase):
         self.assertEqual(wall.sorted(), expected)
     
     # Callable default criterion
-    
+
     def test_callable_default_criterion(self):
         objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
             pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
         criterion = Criterion('i_dont_exist', default=default)
-        self.assertEqual(criterion.get_for_item(objectA1), 1)
+        self.assertEqual(criterion.get_value_for_item(objectA1), 1)
     
     def test_callable_default_criterion_in_wall(self):
         self._create_model_a_objects_and_bricks()
@@ -189,7 +201,75 @@ class BrickTest(unittest.TestCase):
         ))
         expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
         self.assertEqual(wall.sorted(), expected)
-    
+
+    # Callback criterion
+
+    def test_callback_criterion(self):
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
+            pub_date=datetime.datetime(2011, 1, 1, 12, 0), is_sticky=False)
+        objectA3 = TestModelA.objects.create(name='objectA3', popularity=3,
+            pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
+        objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
+            pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
+        item_list = [objectA1, objectA2, objectA3, objectA4]
+        criterion = Criterion('popularity', max)
+        self.assertEqual(criterion.get_value_for_list(item_list), 5)
+
+    def test_callback_criterion_in_wall(self):
+        self._create_model_c_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('popularity', callback=min), SORTING_ASC),
+        ))
+        expected = [self.brickC2, self.brickC1]
+        self.assertEqual(wall.sorted(), expected)
+
+    # Callback default criterion
+
+    def test_callback_default_criterion(self):
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
+            pub_date=datetime.datetime(2011, 1, 1, 12, 0), is_sticky=False)
+        objectA3 = TestModelA.objects.create(name='objectA3', popularity=3,
+            pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
+        objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
+            pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
+        item_list = [objectA1, objectA2, objectA3, objectA4]
+        criterion = Criterion('i_dont_exist', max, default=10)
+        self.assertEqual(criterion.get_value_for_list(item_list), 10)
+
+    def test_callback_default_empty_list_criterion(self):
+        criterion = Criterion('_', max, default=10)
+        self.assertEqual(criterion.get_value_for_list([]), 10)
+
+    # Callback callable default criterion
+
+    def test_callback_callable_default_criterion(self):
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
+            pub_date=datetime.datetime(2011, 1, 1, 12, 0), is_sticky=False)
+        objectA3 = TestModelA.objects.create(name='objectA3', popularity=3,
+            pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
+        objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
+            pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
+        item_list = [objectA1, objectA2, objectA3, objectA4]
+        criterion = Criterion('i_dont_exist', max, default=default)
+        self.assertEqual(criterion.get_value_for_list(item_list), 1)
+
+    def test_callback_callable_default_empty_list_criterion(self):
+        criterion = Criterion('_', max, default=default)
+        self.assertEqual(criterion.get_value_for_list([]), 1)
+
+    # Wrong call
+
+    def test_callback_value_error_criterion(self):
+        criterion = Criterion('_')
+        with self.assertRaises(ValueError):
+            criterion.get_value_for_list('im_wrong')
+
     # Single keys - Single bricks- Single models
     
     def test_single_key_desc_sorting_single_bricks_single_models(self):

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from operator import attrgetter
 
-from django.template import loader, Context
-
 SORTING_ASC = 1
 SORTING_DESC = -1
 
@@ -13,17 +11,17 @@ SORTING_DESC = -1
 class Criterion(object):
     """A criterion works as a sorting key for a BaseWall subclass.
     
-    Functionally it is a proxy to a property of a Brick, whether it is has
-    a single item or a list.
+    It is a proxy to a value of a BaseBrick subclass, whether it is a
+    SingleBrick or a ListBrick.
     
     Params:
-    - attrname: the name of the attribute to retrieve. Can be a callable that
-                takes no argument.
+    - attrname: the name of the attribute to retrieve from an item of a
+                SingleBrick. Can be a callable that takes no argument.
     - callback: a function that receives an item list and returns a
-                single value for the attrname.
+                single value for the attrname, for example `max.
     - default: the value to return when the item doesn't have the
-               attribute or the callback is None. Can be a callable that
-               takes no argument.
+               attribute, the callback is None or the item list is empty.
+               Can be a callable that takes no argument.
     """
     
     def __init__(self, attrname, callback=None, default=None):
@@ -34,30 +32,30 @@ class Criterion(object):
     def __repr__(self):
         return self.attrname
     
-    def get_for_item(self, item):
+    def get_value_for_item(self, item):
         """
-        Returns the value of the `attrname` for the item, or the `default`
-        if the item doesn't have the attribute.
+        Returns a value for an item or the `default` if the item doesn't have
+        any attribute `attrname.
         """
         attrvalue = getattr(item, self.attrname, self.default)
         if callable(attrvalue):
             return attrvalue()
         return attrvalue
     
-    def get_for_item_list(self, items):
+    def get_value_for_list(self, items=()):
         """
-        If the criterion has a callable `callback`, passes the item list
-        to it and returns the value of the `attrname` for the item list, 
-        otherwise returns the `default`.
+        Returns a single value for a list of items, filtering the values for
+        each item through the `callback` function.
+        If no `callback` is specified or if the item list is empty, it returns
+        the `default` value.
         """
-        if self.callback is None or not callable(self.callback):
-            return callable(self.default) and self.default() or self.default
-        if items:
+        if not isinstance(items, (list, tuple)):
+            raise ValueError('List or tuple expected.')
+        if items and self.callback is not None and callable(self.callback):
             # This is needed to avoid ValueError for some callback that can
             # not receive an empty list, like max()
-            return self.callback((self.get_for_item(i) for i in items))
-        else:
-            return callable(self.default) and self.default() or self.default
+            return self.callback((self.get_value_for_item(i) for i in items))
+        return callable(self.default) and self.default() or self.default
     
 
 # ---------------------------------------------------------------------------
@@ -76,8 +74,8 @@ class BaseBrick(object):
     
     template_name = None
     
-    def get_attr_for_criterion(self, criterion):
-        """Returns the criterion attribute for this brick."""
+    def get_value_for_criterion(self, criterion):
+        """Returns the criterion value for this brick."""
         raise NotImplemented
     
     @classmethod
@@ -87,18 +85,7 @@ class BaseBrick(object):
     
     def get_context(self):
         """Returns the context to be passed on to the template."""
-        return Context()
-    
-    def render(self, **extra_context):
-        """
-        Returns the rendered template for the brick.
-        Can raise a TemplateDoesNotExist exception.
-        """
-        template = loader.get_template(self.template_name)
-        context = self.get_context()
-        context.update(extra_context)
-        content = template.render(context)
-        return content
+        return {}
     
 
 class SingleBrick(BaseBrick):
@@ -109,8 +96,8 @@ class SingleBrick(BaseBrick):
     def __repr__(self):
         return repr(self.item)
     
-    def get_attr_for_criterion(self, criterion):
-        return criterion.get_for_item(self.item)
+    def get_value_for_criterion(self, criterion):
+        return criterion.get_value_for_item(self.item)
     
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
@@ -123,10 +110,11 @@ class SingleBrick(BaseBrick):
     def get_context(self):
         """
         Returns the context to be passed on to the template.
-        By default, it returns a dictionary with an 'object' key and the item
-        as the value.
+        By default, it returns a dictionary instance with an 'object' key
+        and the item as the value.
+        Subclass should first call the super method and then update the result.
         """
-        return Context({'object': self.item})
+        return {'object': self.item}
     
 
 class ListBrick(BaseBrick):
@@ -137,13 +125,13 @@ class ListBrick(BaseBrick):
     def __repr__(self):
         return repr(self.items)
     
-    def get_attr_for_criterion(self, criterion):
-        return criterion.get_for_item_list(self.items)
+    def get_value_for_criterion(self, criterion):
+        return criterion.get_value_for_list(self.items)
     
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
         """
-        Return a list with a single brick containing all the object in the
+        Returns a list with a single brick containing all the object in the
         queryset. Subclasses might want to override this method for a more
         sophisticated implementation.
         """
@@ -152,10 +140,11 @@ class ListBrick(BaseBrick):
     def get_context(self):
         """
         Returns the context to be passed on to the template.
-        By default, it returns a dictionary with an 'object_list' key and the 
-        items as the value.
+        By default, it returns a dictionary instance with an 'object_list'
+        key and the items as the value.
+        Subclass should first call the super method and then update the result.
         """
-        return Context({'object_list': self.items})
+        return {'object_list': self.items}
     
 
 # ---------------------------------------------------------------------------
@@ -212,7 +201,7 @@ class BaseWall(object):
         # Courtesy of:
         # http://stackoverflow.com/questions/1143671/python-sorting-list-of-dictionaries-by-multiple-keys
         """
-        fn = attrgetter('get_attr_for_criterion')
+        fn = attrgetter('get_value_for_criterion')
         for criterion, sorting_order in self.criteria:
             result = cmp(fn(left)(criterion), fn(right)(criterion))
             if result:

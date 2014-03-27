@@ -1,6 +1,7 @@
 \.pyc$
 ^.git
 ^.tox
+^.idea
 .DS_Store
 ~$
 ^doc/_build
