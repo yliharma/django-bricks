@@ -1,13 +1,25 @@
 import datetime
+import os
 
 from django.utils import unittest
+from django.test.utils import override_settings
 from django.db import models
+from django.template import Template, Context, TemplateDoesNotExist
 
 from .models import *
 
 
 def default():
     return 1
+
+
+class TestSingleBrick(SingleBrick):
+    template_name = 'templates/single_brick.html'
+
+
+class TestListBrick(ListBrick):
+    template_name = 'templates/list_brick.html'
+
 
 class TestBrickWall(BaseWall):
     pass
@@ -37,6 +49,7 @@ class TestModelB(models.Model):
 
     def pub_date(self):
         return self.date_add
+
 
 class TestModelC(models.Model):
     name = models.CharField(max_length=8)
@@ -450,4 +463,50 @@ class BrickTest(unittest.TestCase):
         pickled = pickle.dumps(wall)
         unpickled = pickle.loads(pickled)
         self.assertListEqual([i.item for i in wall.sorted()], [i.item for i in unpickled.sorted()])
+
+    # Brick
+
+    def test_single_brick_context(self):
+        obj = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        brick = TestSingleBrick(obj)
+        self.assertEqual(brick.get_context(), {'object': obj})
+
+    def test_list_brick_context(self):
+        obj1 = TestModelC.objects.create(name='objectC1', popularity=20,
+            pub_date=datetime.datetime(2002, 1, 1, 12, 0), is_sticky=False)
+        obj2 = TestModelC.objects.create(name='objectC2', popularity=19,
+            pub_date=datetime.datetime(2003, 1, 1, 12, 0), is_sticky=False)
+        brick = TestListBrick([obj1, obj2])
+        self.assertEqual(brick.get_context(), {'object_list': [obj1, obj2]})
+
+    # Template Tag
+
+    def test_template_tag_single_brick_no_template(self):
+        obj = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        brick = SingleBrick(obj)
+        template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
+        with self.assertRaises(TemplateDoesNotExist):
+            template.render(Context({'brick': brick}))
+
+    @override_settings(TEMPLATE_DIRS=['%s/../tests/' % os.path.abspath(os.path.dirname(__file__))] )
+    def test_template_tag_single_brick(self):
+        obj = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        brick = TestSingleBrick(obj)
+        template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
+        html = template.render(Context({'brick': brick}))
+        self.assertEqual(html, 'objectA1')
+
+    @override_settings(TEMPLATE_DIRS=['%s/../tests/' % os.path.abspath(os.path.dirname(__file__))] )
+    def test_template_tag_list_brick(self):
+        obj1 = TestModelC.objects.create(name='objectC1', popularity=20,
+            pub_date=datetime.datetime(2002, 1, 1, 12, 0), is_sticky=False)
+        obj2 = TestModelC.objects.create(name='objectC2', popularity=19,
+            pub_date=datetime.datetime(2003, 1, 1, 12, 0), is_sticky=False)
+        brick = TestListBrick([obj1, obj2])
+        template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
+        html = template.render(Context({'brick': brick}))
+        self.assertEqual(html, 'objectC1objectC2')
     
