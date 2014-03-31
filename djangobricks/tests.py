@@ -1,7 +1,9 @@
 import datetime
 import os
 
+from django import get_version
 from django.utils import unittest
+from django.test import SimpleTestCase
 from django.test.utils import override_settings
 from django.db import models
 from django.template import Template, Context, TemplateDoesNotExist
@@ -14,16 +16,16 @@ def default():
 
 
 class TestSingleBrick(SingleBrick):
-    template_name = 'templates/single_brick.html'
+    template_name = 'single_brick.html'
 
 
 class TestListBrick(ListBrick):
-    template_name = 'templates/list_brick.html'
+    template_name = 'list_brick.html'
 
 
 class TestBrickWall(BaseWall):
     pass
-    
+
 
 class TestModelA(models.Model):
     name = models.CharField(max_length=8)
@@ -61,7 +63,8 @@ class TestModelC(models.Model):
         return unicode(self.name)
 
 
-class BrickTest(unittest.TestCase):
+@override_settings(TEMPLATE_DIRS=['%s/../tests/templates' % os.path.abspath(os.path.dirname(__file__))] )
+class BrickTest(SimpleTestCase):
 
     def setUp(self):
         self.bricks = []
@@ -490,16 +493,23 @@ class BrickTest(unittest.TestCase):
         with self.assertRaises(TemplateDoesNotExist):
             template.render(Context({'brick': brick}))
 
-    @override_settings(TEMPLATE_DIRS=['%s/../tests/' % os.path.abspath(os.path.dirname(__file__))] )
     def test_template_tag_single_brick(self):
         obj = TestModelA.objects.create(name='objectA1', popularity=5,
             pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
         brick = TestSingleBrick(obj)
         template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
         html = template.render(Context({'brick': brick}))
-        self.assertEqual(html, 'objectA1')
+        self.assertHTMLEqual(html, 'objectA1')
 
-    @override_settings(TEMPLATE_DIRS=['%s/../tests/' % os.path.abspath(os.path.dirname(__file__))] )
+    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    def test_template_tag_single_brick_template_used(self):
+        obj = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        brick = TestSingleBrick(obj)
+        template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
+        with self.assertTemplateUsed('single_brick.html'):
+            template.render(Context({'brick': brick}))
+
     def test_template_tag_list_brick(self):
         obj1 = TestModelC.objects.create(name='objectC1', popularity=20,
             pub_date=datetime.datetime(2002, 1, 1, 12, 0), is_sticky=False)
@@ -508,5 +518,24 @@ class BrickTest(unittest.TestCase):
         brick = TestListBrick([obj1, obj2])
         template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
         html = template.render(Context({'brick': brick}))
-        self.assertEqual(html, 'objectC1objectC2')
+        self.assertHTMLEqual(html, 'objectC1objectC2')
+
+    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    def test_template_tag_list_brick_template_used(self):
+        obj1 = TestModelC.objects.create(name='objectC1', popularity=20,
+            pub_date=datetime.datetime(2002, 1, 1, 12, 0), is_sticky=False)
+        obj2 = TestModelC.objects.create(name='objectC2', popularity=19,
+            pub_date=datetime.datetime(2003, 1, 1, 12, 0), is_sticky=False)
+        brick = TestListBrick([obj1, obj2])
+        template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
+        with self.assertTemplateUsed('list_brick.html'):
+            template.render(Context({'brick': brick}))
+
+    def test_template_tag_extra_context(self):
+        obj = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        brick = TestSingleBrick(obj)
+        template = Template('{% load render_brick from bricks %}{% render_brick brick foo="bar" %}')
+        html = template.render(Context({'brick': brick}))
+        self.assertHTMLEqual(html, 'objectA1bar')
     
