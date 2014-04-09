@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 from operator import attrgetter
 
 SORTING_ASC = 1
@@ -175,16 +176,17 @@ class BaseWall(object):
     
     """
     
-    def __init__(self, bricks, criteria=[]):
+    def __init__(self, bricks, criteria=None):
         self.bricks = bricks
-        self.criteria = criteria
+        self.criteria = criteria or []
+        self._sorted = []
     
     def __getitem__(self, key):
-        return self.sorted()[key]
+        return self.sorted[key]
     
     def __iter__(self):
-        return iter(self.sorted())
-    
+        return iter(self.sorted)
+
     def __len__(self):
         return len(self.bricks)
     
@@ -192,7 +194,7 @@ class BaseWall(object):
         # We save the sorted bricks and delete che criteria
         # as those might not be pickable
         obj_dict = self.__dict__.copy()
-        obj_dict['_sorted'] = self.sorted()
+        obj_dict['_sorted'] = self.sorted
         del obj_dict['criteria']
         return obj_dict
     
@@ -208,9 +210,27 @@ class BaseWall(object):
                 return sorting_order * result
         else:
             return 0
-    
+
+    @property
     def sorted(self):
-        if not hasattr(self, '_sorted'):
+        """
+        Lazy property that returns the list of bricks sorted by the criteria.
+        """
+        if not self._sorted:
             self._sorted = sorted(self.bricks, cmp=self._cmp)
         return self._sorted
-    
+
+    def filter(self, callback):
+        """
+        Returns a copy of the wall where the bricks have been filtered using
+        the given `callback`, that should be a function accepting a brick
+        instance and returning a boolean.
+        """
+        # The order of bricks is the same even when filtered.
+        # So we let the class to sort them (if they are not already) and then
+        # apply the filter.
+        obj = copy.copy(self)
+        obj._sorted = [b for b in self if callback(b)]
+        # This will keep __len__ value consistent
+        obj.bricks = obj._sorted
+        return obj

@@ -14,6 +14,11 @@ from .models import *
 def default():
     return 1
 
+def callback_filter_a(brick):
+    return brick.item._meta.model_name == 'testmodela'
+
+def callback_filter_b(brick):
+    return brick.item._meta.model_name == 'testmodelb'
 
 class TestSingleBrick(SingleBrick):
     template_name = 'single_brick.html'
@@ -200,7 +205,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('callable_popularity'), SORTING_DESC),
         ))
         expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     # Callable default criterion
 
@@ -216,7 +221,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('i_dont_exist', default=default), SORTING_DESC),
         ))
         expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
 
     # Callback criterion
 
@@ -239,7 +244,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity', callback=min), SORTING_ASC),
         ))
         expected = [self.brickC2, self.brickC1]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
 
     # Callback default criterion
 
@@ -294,7 +299,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity'), SORTING_DESC),
         ))
         expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_single_key_asc_sorting_single_bricks_single_models(self):
         self._create_model_a_objects_and_bricks()
@@ -302,7 +307,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity'), SORTING_ASC),
         ))
         expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     # Multi keys - Single bricks - Single Models
     
@@ -313,7 +318,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity'), SORTING_DESC),
         ))
         expected = [self.brickA3, self.brickA1, self.brickA2, self.brickA4]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_multi_key_2_sorting_single_bricks_single_models(self):
         self._create_model_a_objects_and_bricks()
@@ -322,7 +327,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity'), SORTING_DESC),
         ))
         expected = [self.brickA1, self.brickA2, self.brickA4, self.brickA3]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     # Single keys - Single bricks - Multi models
     
@@ -334,7 +339,7 @@ class BrickTest(SimpleTestCase):
         ))
         expected = [self.brickB1, self.brickB2, self.brickB3, self.brickB4,
                     self.brickA1, self.brickA2, self.brickA3, self.brickA4]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_single_key_asc_sorting_single_bricks_multi_models(self):
         self._create_model_a_objects_and_bricks()
@@ -344,7 +349,7 @@ class BrickTest(SimpleTestCase):
         ))
         expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1,
                     self.brickB4, self.brickB3, self.brickB2, self.brickB1]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     # Multi keys - Single bricks - Multi models
     
@@ -357,7 +362,7 @@ class BrickTest(SimpleTestCase):
         ))
         expected = [self.brickB3, self.brickA3, self.brickB1, self.brickB2,
                     self.brickB4, self.brickA1, self.brickA2, self.brickA4]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_multi_key_2_sorting_single_bricks_multi_models(self):
         self._create_model_a_objects_and_bricks()
@@ -368,7 +373,7 @@ class BrickTest(SimpleTestCase):
         ))
         expected = [self.brickB1, self.brickB2, self.brickB4, self.brickA1,
                     self.brickA2, self.brickA4, self.brickB3, self.brickA3]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     # Single keys - Multi bricks - Single models
     
@@ -378,7 +383,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity', callback=max), SORTING_DESC),
         ))
         expected = [self.brickC1, self.brickC2]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_single_key_2_sorting_multi_bricks_single_models(self):
         self._create_model_c_objects_and_bricks()
@@ -386,7 +391,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity', callback=min), SORTING_DESC),
         ))
         expected = [self.brickC1, self.brickC2]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_single_key_3_sorting_multi_bricks_single_models(self):
         self._create_model_c_objects_and_bricks()
@@ -394,7 +399,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity', callback=max), SORTING_ASC),
         ))
         expected = [self.brickC2, self.brickC1]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_single_key_4_sorting_multi_bricks_single_models(self):
         self._create_model_c_objects_and_bricks()
@@ -402,7 +407,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity', callback=min), SORTING_ASC),
         ))
         expected = [self.brickC2, self.brickC1]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     # Multi keys - Multi bricks - Single models
     
@@ -413,7 +418,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity', callback=max), SORTING_DESC),
         ))
         expected = [self.brickC2, self.brickC1]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_multi_key_2_sorting_multi_bricks_single_models(self):
         self._create_model_c_objects_and_bricks()
@@ -422,7 +427,7 @@ class BrickTest(SimpleTestCase):
             (Criterion('popularity', callback=min), SORTING_DESC),
         ))
         expected = [self.brickC1, self.brickC2]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     # Multi keys - Mixed bricks - Multi models
     
@@ -438,7 +443,7 @@ class BrickTest(SimpleTestCase):
                     self.brickA4, self.brickA2, self.brickA1,
                     self.brickB4, self.brickB2, self.brickB1,
                     self.brickC2, self.brickC1]
-        self.assertEqual(wall.sorted(), expected)
+        self.assertEqual(list(wall), expected)
     
     def test_multi_key_2_sorting_multi_bricks_multi_models(self):
         self._create_model_a_objects_and_bricks()
@@ -452,8 +457,20 @@ class BrickTest(SimpleTestCase):
                     self.brickC1, self.brickC2,
                     self.brickB1, self.brickB2, self.brickB4,
                     self.brickA1, self.brickA2, self.brickA4]
-        self.assertEqual(wall.sorted(), expected)
-    
+        self.assertEqual(list(wall), expected)
+
+    def test_multi_key_1_sorting_single_bricks_multi_models_reversed(self):
+        self._create_model_a_objects_and_bricks()
+        self._create_model_b_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('is_sticky'), SORTING_DESC),
+            (Criterion('popularity'), SORTING_DESC),
+        ))
+        expected = [self.brickB3, self.brickA3, self.brickB1, self.brickB2,
+                    self.brickB4, self.brickA1, self.brickA2, self.brickA4]
+        expected = reversed(expected)
+        self.assertEqual(list(reversed(list(wall))), list(expected))
+
     # Pickle
     
     def test_pickle(self):
@@ -465,7 +482,7 @@ class BrickTest(SimpleTestCase):
         ))
         pickled = pickle.dumps(wall)
         unpickled = pickle.loads(pickled)
-        self.assertListEqual([i.item for i in wall.sorted()], [i.item for i in unpickled.sorted()])
+        self.assertListEqual([i.item for i in list(wall)], [i.item for i in list(unpickled)])
 
     # Brick
 
@@ -538,4 +555,52 @@ class BrickTest(SimpleTestCase):
         template = Template('{% load render_brick from bricks %}{% render_brick brick foo="bar" %}')
         html = template.render(Context({'brick': brick}))
         self.assertHTMLEqual(html, 'objectA1bar')
+
+    # Filtering
+
+    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    def test_matching_filter(self):
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('popularity'), SORTING_DESC),
+        ))
+        wall = wall.filter(callback_filter_a)
+        expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
+        self.assertEqual(list(wall), expected)
+
+    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    def test_matching_filter_multi_models(self):
+        self._create_model_a_objects_and_bricks()
+        self._create_model_b_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('popularity'), SORTING_ASC),
+        ))
+        wall = wall.filter(callback_filter_a)
+        expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1]
+        self.assertEqual(list(wall), expected)
+
+    def test_non_matching_filter(self):
+        self._create_model_a_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('popularity'), SORTING_DESC),
+        ))
+        wall = wall.filter(lambda x:False)
+        self.assertEqual(list(wall), [])
+
+    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    def test_matching_filter_multiple(self):
+        self._create_model_a_objects_and_bricks()
+        self._create_model_b_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('popularity'), SORTING_ASC),
+        ))
+        filtered_wall_a = wall.filter(callback_filter_a)
+        expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1]
+        self.assertEqual(list(filtered_wall_a), expected)
+        filtered_wall_b = wall.filter(callback_filter_b)
+        expected = [self.brickB4, self.brickB3, self.brickB2, self.brickB1]
+        self.assertEqual(list(filtered_wall_b), expected)
+        expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1,
+                    self.brickB4, self.brickB3, self.brickB2, self.brickB1]
+        self.assertEqual(list(wall), expected)
     
