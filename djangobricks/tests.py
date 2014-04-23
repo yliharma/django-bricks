@@ -20,6 +20,9 @@ def callback_filter_a(brick):
 def callback_filter_b(brick):
     return brick.item._meta.model_name == 'testmodelb'
 
+def callback_filter_alwayes_true(brick):
+    return True
+
 class TestSingleBrick(SingleBrick):
     template_name = 'single_brick.html'
 
@@ -603,4 +606,15 @@ class BrickTest(SimpleTestCase):
         expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1,
                     self.brickB4, self.brickB3, self.brickB2, self.brickB1]
         self.assertEqual(list(wall), expected)
+    
+    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    def test_matching_filter_multiple_callback(self):
+        self._create_model_a_objects_and_bricks()
+        self._create_model_b_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('popularity'), SORTING_ASC),
+        ))
+        filtered_wall = wall.filter([callback_filter_a, callback_filter_alwayes_true])
+        expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1]
+        self.assertEqual(list(filtered_wall), expected)
     
