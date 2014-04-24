@@ -220,19 +220,26 @@ class BaseWall(object):
             self._sorted = sorted(self.bricks, cmp=self._cmp)
         return self._sorted
 
-    def filter(self, callback):
+    def filter(self, callback, operator='AND'):
         """
         Returns a copy of the wall where the bricks have been filtered using
-        the given `callback`, that should be a function accepting a brick
-        instance and returning a boolean.
+        the given `callback`, that should be a function or a list of functions
+        accepting a brick instance and returning a boolean.
+        By default, if more than a callback is given they are 'ANDed', that is,
+        a brick will pass the test if every callback returns True.
+        This behaviour can be changed by setting the `operator` parameter to
+        'OR', in which case as soon as callback returns True the brick is 
+        accepted.
         """
+        assert operator in ('OR', 'AND'), "Only 'AND' or 'OR' operators are supported"
         if not isinstance(callback, (list, tuple)):
             callback = [callback]
         # The order of bricks is the same even when filtered.
         # So we let the class to sort them (if they are not already) and then
         # apply the filter.
         obj = copy.copy(self)
-        obj._sorted = [b for b in self if all(c(b) for c in callback)]
+        func = all if operator == 'AND' else any
+        obj._sorted = [i for i in self if func(c(i) for c in callback)]
         # This will keep __len__ value consistent
         obj.bricks = obj._sorted
         return obj
