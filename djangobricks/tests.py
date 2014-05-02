@@ -505,14 +505,6 @@ class BrickTest(SimpleTestCase):
 
     # Template Tag
 
-    def test_template_tag_single_brick_no_template(self):
-        obj = TestModelA.objects.create(name='objectA1', popularity=5,
-            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
-        brick = SingleBrick(obj)
-        template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
-        with self.assertRaises(TemplateDoesNotExist):
-            template.render(Context({'brick': brick}))
-
     def test_template_tag_single_brick(self):
         obj = TestModelA.objects.create(name='objectA1', popularity=5,
             pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
@@ -618,15 +610,15 @@ class BrickTest(SimpleTestCase):
         expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1]
         self.assertEqual(list(filtered_wall), expected)
     
-    # @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
-    # def test_matching_filter_multiple_callback_or(self):
-    #     self._create_model_a_objects_and_bricks()
-    #     self._create_model_b_objects_and_bricks()
-    #     wall = TestBrickWall(self.bricks, criteria=(
-    #         (Criterion('popularity'), SORTING_ASC),
-    #     ))
-    #     filtered_wall = wall.filter([callback_filter_a, callback_filter_always_true], 'OR')
-    #     expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1,
-    #                 self.brickB4, self.brickB3, self.brickB2, self.brickB1]
-    #     self.assertEqual(list(filtered_wall), expected)
+    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    def test_matching_filter_multiple_callback_or(self):
+        self._create_model_a_objects_and_bricks()
+        self._create_model_b_objects_and_bricks()
+        wall = TestBrickWall(self.bricks, criteria=(
+            (Criterion('popularity'), SORTING_ASC),
+        ))
+        filtered_wall = wall.filter([callback_filter_a, callback_filter_always_true], 'OR')
+        expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1,
+                    self.brickB4, self.brickB3, self.brickB2, self.brickB1]
+        self.assertEqual(list(filtered_wall), expected)
     

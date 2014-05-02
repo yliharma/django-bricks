@@ -13,6 +13,9 @@ def render_brick(context, brick, **extra_context):
     The method accepts keyword arguments that will be passed as extra context
     to the brick.
     """
+    if brick.template_name is None:
+        return u''
+
     request = context.get('request')
 
     if request is not None:
