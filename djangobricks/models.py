@@ -195,7 +195,8 @@ class BaseWall(object):
         # as those might not be pickable
         obj_dict = self.__dict__.copy()
         obj_dict['_sorted'] = self.sorted
-        del obj_dict['criteria']
+        if obj_dict.has_key('criteria'):
+            del obj_dict['criteria']
         return obj_dict
     
     def _cmp(self, left, right):
