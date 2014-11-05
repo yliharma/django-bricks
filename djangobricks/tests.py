@@ -39,7 +39,7 @@ class TestModelA(models.Model):
     name = models.CharField(max_length=8)
     popularity = models.PositiveIntegerField()
     pub_date = models.DateTimeField()
-    is_sticky = models.BooleanField()
+    is_sticky = models.BooleanField(default=False)
     
     def __unicode__(self):
         return unicode(self.name)
@@ -52,7 +52,7 @@ class TestModelB(models.Model):
     name = models.CharField(max_length=8)
     date_add = models.DateTimeField()
     popularity = models.PositiveIntegerField()
-    is_sticky = models.BooleanField()
+    is_sticky = models.BooleanField(default=False)
     
     def __unicode__(self):
         return unicode(self.name)
@@ -65,7 +65,7 @@ class TestModelC(models.Model):
     name = models.CharField(max_length=8)
     pub_date = models.DateTimeField()
     popularity = models.PositiveIntegerField()
-    is_sticky = models.BooleanField()
+    is_sticky = models.BooleanField(default=False)
     
     def __unicode__(self):
         return unicode(self.name)
