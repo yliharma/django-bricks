@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 import copy
 from operator import attrgetter
+from itertools import chain
 
 SORTING_ASC = 1
 SORTING_DESC = -1
@@ -11,10 +11,10 @@ SORTING_DESC = -1
 
 class Criterion(object):
     """A criterion works as a sorting key for a BaseWall subclass.
-    
+
     It is a proxy to a value of a BaseBrick subclass, whether it is a
     SingleBrick or a ListBrick.
-    
+
     Params:
     - attrname: the name of the attribute to retrieve from an item of a
                 SingleBrick. Can be a callable that takes no argument.
@@ -24,15 +24,15 @@ class Criterion(object):
                attribute, the callback is None or the item list is empty.
                Can be a callable that takes no argument.
     """
-    
+
     def __init__(self, attrname, callback=None, default=None):
         self.attrname = attrname
         self.callback = callback
         self.default = default
-    
+
     def __repr__(self):
         return self.attrname
-    
+
     def get_value_for_item(self, item):
         """
         Returns a value for an item or the `default` if the item doesn't have
@@ -42,7 +42,7 @@ class Criterion(object):
         if callable(attrvalue):
             return attrvalue()
         return attrvalue
-    
+
     def get_value_for_list(self, items=()):
         """
         Returns a single value for a list of items, filtering the values for
@@ -57,7 +57,7 @@ class Criterion(object):
             # not receive an empty list, like max()
             return self.callback((self.get_value_for_item(i) for i in items))
         return callable(self.default) and self.default() or self.default
-    
+
 
 # ---------------------------------------------------------------------------
 # Brick
@@ -65,41 +65,41 @@ class Criterion(object):
 
 class BaseBrick(object):
     """Base class for a brick.
-    
+
     A brick is a container for a single Django model instance or a list of
     instances. Subclasses should extend one of the two provided subclasses
     that implement those two use cases.
-    
+
     Also, a brick knows how to render itself.
     """
-    
+
     template_name = None
-    
+
     def get_value_for_criterion(self, criterion):
         """Returns the criterion value for this brick."""
         raise NotImplemented
-    
+
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
         """Returns a list of bricks from the given queryset."""
         raise NotImplemented
-    
+
     def get_context(self):
         """Returns the context to be passed on to the template."""
         return {}
-    
+
 
 class SingleBrick(BaseBrick):
     """Brick for a single object."""
     def __init__(self, item):
         self.item = item
-    
+
     def __repr__(self):
         return repr(self.item)
-    
+
     def get_value_for_criterion(self, criterion):
         return criterion.get_value_for_item(self.item)
-    
+
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
         """
@@ -107,7 +107,7 @@ class SingleBrick(BaseBrick):
         queryset.
         """
         return (cls(i) for i in queryset)
-    
+
     def get_context(self):
         """
         Returns the context to be passed on to the template.
@@ -116,19 +116,19 @@ class SingleBrick(BaseBrick):
         Subclass should first call the super method and then update the result.
         """
         return {'object': self.item}
-    
+
 
 class ListBrick(BaseBrick):
     """Brick for a list of objects."""
     def __init__(self, items):
         self.items = items
-    
+
     def __repr__(self):
         return repr(self.items)
-    
+
     def get_value_for_criterion(self, criterion):
         return criterion.get_value_for_list(self.items)
-    
+
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
         """
@@ -137,7 +137,7 @@ class ListBrick(BaseBrick):
         sophisticated implementation.
         """
         return [cls(list(queryset))]
-    
+
     def get_context(self):
         """
         Returns the context to be passed on to the template.
@@ -146,7 +146,7 @@ class ListBrick(BaseBrick):
         Subclass should first call the super method and then update the result.
         """
         return {'object_list': self.items}
-    
+
 
 # ---------------------------------------------------------------------------
 # Brick Manager
@@ -154,42 +154,42 @@ class ListBrick(BaseBrick):
 
 class BaseWall(object):
     """Manager for a list of bricks.
-    
+
     It orders a list of bricks using the given criteria and can be sliced or
     iterated.
-    
+
     Sample usage:
-    
+
     class MyBrickWall(BaseWall):
         ...
-    
+
     bricks = SingleBrick.get_bricks_for_queryset(MyObject.objects.all())
     bricks.extend(ListBrick.get_bricks_for_queryset(MyOtherObject.objects.all())
-    
+
     wall = MyBrickWall(bricks, criteria=(
         (Criterion('pub_date', callback=max), SORTING_DESC),
         (Criterion('popularity', callback=max), SORTING_DESC),
     ))
-    
+
     for brick in wall:
         do_something(brick)
-    
+
     """
-    
+
     def __init__(self, bricks, criteria=None):
         self.bricks = bricks
         self.criteria = criteria or []
         self._sorted = []
-    
+
     def __getitem__(self, key):
         return self.sorted[key]
-    
+
     def __iter__(self):
         return iter(self.sorted)
 
     def __len__(self):
         return len(self.bricks)
-    
+
     def __getstate__(self):
         # We save the sorted bricks and delete che criteria
         # as those might not be pickable
@@ -198,7 +198,7 @@ class BaseWall(object):
         if obj_dict.has_key('criteria'):
             del obj_dict['criteria']
         return obj_dict
-    
+
     def _cmp(self, left, right):
         """
         # Courtesy of:
@@ -245,3 +245,71 @@ class BaseWall(object):
         obj.bricks = obj._sorted
         return obj
 
+
+# ---------------------------------------------------------------------------
+# Wall Factory
+# ---------------------------------------------------------------------------
+
+class BaseWallFactory(object):
+    """Helper class that simplifies and encapsulates the creation of a wall.
+
+    See the docs for sample usage.
+    """
+    def __init__(self, criteria=None, wall_class=BaseWall):
+        self.criteria = criteria or []
+        self.wall_class = wall_class
+
+    def get_content(self):
+        """Must returns a list of tuples of two elements each.
+
+        The first one is a Brick class and the second the queryset of objects
+        that should be rendered using that class.
+
+        E.g.:
+
+            returns [
+                (ArticleBrick, articles),
+                (VideoBrick, videos),
+                (NewsBrick, news),
+            ]
+        """
+        raise NotImplementedError
+
+    def wall(self):
+        """Returns a configured instance of the wall.
+
+        Normally you should not override this method unless you want to
+        manipulate the list of bricks somehow. In that case make sure you call
+        super before applying your logic.
+        """
+        def content_iterator():
+            # Do some sanity check just to help the user
+            for brick, queryset in self.get_content():
+                if not issubclass(brick, BaseBrick):
+                    raise TypeError(u"Expected a BaseBrick subclass, "
+                                     "got %r instead" % brick)
+                yield brick, queryset
+
+        bricks = (b.get_bricks_for_queryset(qs) for b, qs in content_iterator())
+        bricks_list = list(chain.from_iterable(bricks))
+        return self.wall_class(bricks_list, self.criteria)
+
+def wall_factory(content, criteria=None, brick_class=SingleBrick,
+                 wall_class=BaseWall):
+    """
+    An utility method to configure a simple wall object that uses a single
+    brick class.
+    You can just pass the content as a queryset or a list of querysets, a list
+    of criteria and in case a custom brick class.
+
+    See the docs for sample usage.
+    """
+    # Cannot do that in the local scope of get_content!
+    if not isinstance(content, (list, tuple)):
+        content = [content]
+    def get_content():
+        return ((brick_class, queryset) for queryset in content)
+    factory = BaseWallFactory(criteria, wall_class)
+    # Monkey patch the factory instance
+    factory.get_content = get_content
+    return factory.wall()
