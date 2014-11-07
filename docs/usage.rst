@@ -143,9 +143,19 @@ We are almost there! All we have to do is to create our wall in the view:
 
 .. code-block:: python
 
+    from djangobricks.models import SORTING_DESC
+
     def index(request):
-        last_content_wall = HomepageWallFactory([CRITERION_PUB_DATE])
-        most_commented_content_wall = HomepageWallFactory([CRITERION_COMMENT_COUNT])
+        last_content_criteria = (
+            (CRITERION_PUB_DATE, SORTING_DESC),
+        )
+        last_content_wall = HomepageWallFactory(last_content_criteria)
+        
+        most_commented_criteria = (
+            (CRITERION_COMMENT_COUNT, SORTING_DESC),
+        )
+        most_commented_content_wall = HomepageWallFactory(most_commented_criteria)
+        
         context = {
             'last_content_wall': last_content_wall,
             'most_commented_content_wall: most_commented_content_wall
