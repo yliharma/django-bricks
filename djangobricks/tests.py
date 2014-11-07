@@ -690,7 +690,8 @@ class BrickTest(SimpleTestCase):
             (Criterion('is_sticky'), SORTING_ASC),
             (Criterion('popularity'), SORTING_DESC),
         )
-        wall = wall_factory(TestModelA.objects.all(), criteria=criteria)
+        wall = wall_factory(TestModelA.objects.all(), TestSingleBrick,
+                            criteria=criteria)
         expected = [self.brickA1.item, self.brickA2.item, self.brickA4.item,
                     self.brickA3.item]
         self.assertEqual([b.item for b in wall], expected)
@@ -706,7 +707,7 @@ class BrickTest(SimpleTestCase):
             TestModelA.objects.all(),
             TestModelB.objects.all(),
         )
-        wall = wall_factory(content, criteria=criteria)
+        wall = wall_factory(content, TestSingleBrick, criteria=criteria)
         expected = [self.brickB1.item, self.brickB2.item, self.brickB4.item,
                     self.brickA1.item, self.brickA2.item, self.brickA4.item,
                     self.brickB3.item, self.brickA3.item]

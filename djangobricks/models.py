@@ -10,19 +10,20 @@ SORTING_DESC = -1
 # ---------------------------------------------------------------------------
 
 class Criterion(object):
-    """A criterion works as a sorting key for a BaseWall subclass.
+    """A criterion works as a sorting key for a :class:`BaseWall subclass.
 
-    It is a proxy to a value of a BaseBrick subclass, whether it is a
-    SingleBrick or a ListBrick.
+    It is a proxy to a value of a :class:BaseBrick subclass, whether it is a
+    :class:`SingleBrick` or a :class:`ListBrick.
 
-    Params:
-    - attrname: the name of the attribute to retrieve from an item of a
-                SingleBrick. Can be a callable that takes no argument.
-    - callback: a function that receives an item list and returns a
-                single value for the attrname, for example `max.
-    - default: the value to return when the item doesn't have the
-               attribute, the callback is None or the item list is empty.
-               Can be a callable that takes no argument.
+    :param attrname: the name of the attribute to retrieve from an item of a
+        :class:`SingleBrick`. Can be a callable that takes no argument.
+
+    :param callback: a function that receives an item list and returns a
+        single value for the ``attrname``, for example ``max``.
+
+    :param default: the value to return when the item doesn't have the
+         attribute, the ``callback``` is ``None`` or the item list is empty.
+         Can be a callable that takes no argument.
     """
 
     def __init__(self, attrname, callback=None, default=None):
@@ -35,8 +36,8 @@ class Criterion(object):
 
     def get_value_for_item(self, item):
         """
-        Returns a value for an item or the `default` if the item doesn't have
-        any attribute `attrname.
+        Returns a value for an item or the :attr:`default` if the item doesn't have
+        any attribute :attr:`attrname`.
         """
         attrvalue = getattr(item, self.attrname, self.default)
         if callable(attrvalue):
@@ -46,9 +47,9 @@ class Criterion(object):
     def get_value_for_list(self, items=()):
         """
         Returns a single value for a list of items, filtering the values for
-        each item through the `callback` function.
-        If no `callback` is specified or if the item list is empty, it returns
-        the `default` value.
+        each item through the :attr:`callback` function.
+        If no :attr:`callback` is specified or if the item list is empty,
+        it returns the :attr:`default` value.
         """
         if not isinstance(items, (list, tuple)):
             raise ValueError('List or tuple expected.')
@@ -69,20 +70,18 @@ class BaseBrick(object):
     A brick is a container for a single Django model instance or a list of
     instances. Subclasses should extend one of the two provided subclasses
     that implement those two use cases.
-
-    Also, a brick knows how to render itself.
     """
 
-    template_name = None
+    template_name = None #: The name of the template file to render the brick.
 
     def get_value_for_criterion(self, criterion):
         """Returns the criterion value for this brick."""
-        raise NotImplemented
+        raise NotImplementedError
 
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
         """Returns a list of bricks from the given queryset."""
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_context(self):
         """Returns the context to be passed on to the template."""
@@ -111,7 +110,7 @@ class SingleBrick(BaseBrick):
     def get_context(self):
         """
         Returns the context to be passed on to the template.
-        By default, it returns a dictionary instance with an 'object' key
+        By default, it returns a dictionary instance with an *object* key
         and the item as the value.
         Subclass should first call the super method and then update the result.
         """
@@ -141,7 +140,7 @@ class ListBrick(BaseBrick):
     def get_context(self):
         """
         Returns the context to be passed on to the template.
-        By default, it returns a dictionary instance with an 'object_list'
+        By default, it returns a dictionary instance with an *object_list*
         key and the items as the value.
         Subclass should first call the super method and then update the result.
         """
@@ -157,23 +156,9 @@ class BaseWall(object):
 
     It orders a list of bricks using the given criteria and can be sliced or
     iterated.
-
-    Sample usage:
-
-    class MyBrickWall(BaseWall):
-        ...
-
-    bricks = SingleBrick.get_bricks_for_queryset(MyObject.objects.all())
-    bricks.extend(ListBrick.get_bricks_for_queryset(MyOtherObject.objects.all())
-
-    wall = MyBrickWall(bricks, criteria=(
-        (Criterion('pub_date', callback=max), SORTING_DESC),
-        (Criterion('popularity', callback=max), SORTING_DESC),
-    ))
-
-    for brick in wall:
-        do_something(brick)
-
+    
+    :param bricks: the list of bricks to sort.
+    :param criteria: the list of criteria to sort the bricks by.
     """
 
     def __init__(self, bricks, criteria=None):
@@ -224,13 +209,15 @@ class BaseWall(object):
     def filter(self, callback, operator='AND'):
         """
         Returns a copy of the wall where the bricks have been filtered using
-        the given `callback`, that should be a function or a list of functions
-        accepting a brick instance and returning a boolean.
-        By default, if more than a callback is given they are 'ANDed', that is,
-        a brick will pass the test if every callback returns True.
-        This behaviour can be changed by setting the `operator` parameter to
-        'OR', in which case as soon as callback returns True the brick is 
-        accepted.
+        the given :attr:`callback`, that should be a function or a list of
+        functions accepting a brick instance and returning a boolean.
+
+        By default, if more than a callback is given they are *ANDed*, that is,
+        a brick will pass the test if every callback returns ``True``.
+
+        This behaviour can be changed by setting the :attr:`operator` parameter
+        to ``OR``, in which case as soon as callback returns ``True`` the brick
+        is accepted.
         """
         assert operator in ('OR', 'AND'), "Only 'AND' or 'OR' operators are supported"
         if not isinstance(callback, (list, tuple)):
@@ -253,7 +240,9 @@ class BaseWall(object):
 class BaseWallFactory(object):
     """Helper class that simplifies and encapsulates the creation of a wall.
 
-    See the docs for sample usage.
+    :param criteria: the list of criteria to sort the bricks by.
+    :param wall_class: an optional class for the wall.
+        Must subclass :class:`BaseWall`
     """
     def __init__(self, criteria=None, wall_class=BaseWall):
         self.criteria = criteria or []
@@ -266,6 +255,8 @@ class BaseWallFactory(object):
         that should be rendered using that class.
 
         E.g.:
+
+        .. code-block:: python
 
             returns [
                 (ArticleBrick, articles),
@@ -294,13 +285,12 @@ class BaseWallFactory(object):
         bricks_list = list(chain.from_iterable(bricks))
         return self.wall_class(bricks_list, self.criteria)
 
-def wall_factory(content, criteria=None, brick_class=SingleBrick,
-                 wall_class=BaseWall):
+def wall_factory(content, brick_class, criteria=None, wall_class=BaseWall):
     """
     An utility method to configure a simple wall object that uses a single
     brick class.
-    You can just pass the content as a queryset or a list of querysets, a list
-    of criteria and in case a custom brick class.
+    You can just pass the content as a queryset or a list of querysets, a custom
+    brick class and a list of criteria.
 
     See the docs for sample usage.
     """
