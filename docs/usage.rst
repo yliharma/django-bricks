@@ -128,7 +128,7 @@ At this point we can create our wall by hand, but let's use the
     from djangobricks.models import BaseWallFactory
 
     class HomepageWallFactory(BaseWallFactory):
-        get_content(self):
+        def get_content(self):
             return (
                 (NewsBrick, News.objects.all()),
                 (VideoBrick, Video.objects.all())
