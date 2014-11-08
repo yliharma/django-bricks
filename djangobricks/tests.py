@@ -542,6 +542,18 @@ class BrickTest(SimpleTestCase):
         brick = TestListBrick([obj1, obj2])
         self.assertEqual(brick.get_context(), {'object_list': [obj1, obj2]})
 
+    def test_list_brick_chunk(self):
+        now = datetime.datetime.now()
+        objects = []
+        for i in xrange(12):
+            obj = TestModelC.objects.create(name=i, popularity=i, pub_date=now)
+            objects.append(obj)
+        bricks = TestListBrick.get_bricks_for_queryset(TestModelC.objects.all())
+        for i in xrange(3):
+            start = i * TestListBrick.chunk_size
+            stop = start + TestListBrick.chunk_size
+            self.assertEqual(bricks[i].items, objects[start:stop])
+
     # Template Tag
 
     def test_template_tag_single_brick(self):

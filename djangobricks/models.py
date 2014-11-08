@@ -119,6 +119,8 @@ class SingleBrick(BaseBrick):
 
 class ListBrick(BaseBrick):
     """Brick for a list of objects."""
+    chunk_size = 5 #: The default length of a list.
+
     def __init__(self, items):
         self.items = items
 
@@ -131,11 +133,15 @@ class ListBrick(BaseBrick):
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
         """
-        Returns a list with a single brick containing all the object in the
-        queryset. Subclasses might want to override this method for a more
-        sophisticated implementation.
+        Returns a list of bricks, each one containing :attr:chunk_size elements.
+        Subclasses might want to override this method for a more sophisticated
+        implementation.
         """
-        return [cls(list(queryset))]
+        count = queryset.count()
+        # Execute the query once to avoid several OFFSET LIMIT
+        items = list(queryset)
+        return [cls(i) for i in (items[i:i+cls.chunk_size]
+                                 for i in xrange(0, count, cls.chunk_size))]
 
     def get_context(self):
         """
