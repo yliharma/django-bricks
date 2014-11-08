@@ -1,6 +1,8 @@
 from django import template
 from django.template.loader import render_to_string
 
+from ..exceptions import TemplateNameNotFound
+
 register = template.Library()
 
 @register.simple_tag(takes_context=True)
@@ -14,7 +16,8 @@ def render_brick(context, brick, **extra_context):
     to the brick.
     """
     if brick.template_name is None:
-        return u''
+        raise TemplateNameNotFound(u'%r does not define '
+                                    'any template name.' % brick.__class__)
 
     request = context.get('request')
 

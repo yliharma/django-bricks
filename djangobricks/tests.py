@@ -18,6 +18,7 @@ from .models import (
     BaseWallFactory,
     wall_factory,
 )
+from .exceptions import TemplateNameNotFound
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -39,6 +40,9 @@ class TestSingleBrick(SingleBrick):
 
 class TestListBrick(ListBrick):
     template_name = 'list_brick.html'
+
+
+class TestNoTemplateSingleBrick(SingleBrick): pass
 
 
 class NotABrick(object): pass
@@ -585,6 +589,14 @@ class BrickTest(SimpleTestCase):
         template = Template('{% load render_brick from bricks %}{% render_brick brick foo="bar" %}')
         html = template.render(Context({'brick': brick}))
         self.assertHTMLEqual(html, 'objectA1bar')
+
+    def test_template_tag_single_brick_no_template(self):
+        obj = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        brick = TestNoTemplateSingleBrick(obj)
+        template = Template('{% load render_brick from bricks %}{% render_brick brick %}')
+        with self.assertRaises(TemplateNameNotFound):
+            template.render(Context({'brick': brick}))
 
     # Filtering
 
