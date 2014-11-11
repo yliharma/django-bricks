@@ -2,7 +2,7 @@
 When you need a wall.
 """
 
-VERSION = (1, 4, 0)
+VERSION = (1, 0, 0)
 
 
 def get_version():

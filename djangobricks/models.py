@@ -10,10 +10,10 @@ SORTING_DESC = -1
 # ---------------------------------------------------------------------------
 
 class Criterion(object):
-    """A criterion works as a sorting key for a :class:`BaseWall subclass.
+    """A criterion works as a sorting key for a :class:`BaseWall` subclass.
 
     It is a proxy to a value of a :class:BaseBrick subclass, whether it is a
-    :class:`SingleBrick` or a :class:`ListBrick.
+    :class:`SingleBrick` or a :class:`ListBrick`.
 
     :param attrname: the name of the attribute to retrieve from an item of a
         :class:`SingleBrick`. Can be a callable that takes no argument.
@@ -133,9 +133,8 @@ class ListBrick(BaseBrick):
     @classmethod
     def get_bricks_for_queryset(cls, queryset):
         """
-        Returns a list of bricks, each one containing :attr:chunk_size elements.
-        Subclasses might want to override this method for a more sophisticated
-        implementation.
+        Returns a list of bricks, each one containing :attr:`chunk_size`
+        elements.
         """
         count = queryset.count()
         # Execute the query once to avoid several OFFSET LIMIT

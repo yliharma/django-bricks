@@ -75,6 +75,10 @@ instance itself, otherwise it's a property of the list.
 You can also specify a callable instead of a model property or a default value
 if, for example, the value has no meaning for a given model.
 
+It's important to note that a criterion has no information about the actual
+sorting order, so you have to pass that info along using the
+:py:attr:`SORTING_ASC` and the :py:attr:`SORTING_DESC` constant.
+
 Be sure to check the :py:class:`Criterion <djangobricks.models.Criterion>` class
 reference.
 
