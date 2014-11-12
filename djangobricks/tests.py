@@ -280,6 +280,19 @@ class BrickTest(SimpleTestCase):
         criterion = Criterion('popularity', max)
         self.assertEqual(criterion.get_value_for_list(item_list), 5)
 
+    def test_custom_callback_criterion(self):
+        objectA1 = TestModelA.objects.create(name='objectA1', popularity=5,
+            pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
+        objectA2 = TestModelA.objects.create(name='objectA2', popularity=4,
+            pub_date=datetime.datetime(2011, 1, 1, 12, 0), is_sticky=False)
+        objectA3 = TestModelA.objects.create(name='objectA3', popularity=3,
+            pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
+        objectA4 = TestModelA.objects.create(name='objectA4', popularity=4,
+            pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
+        item_list = [objectA1, objectA2, objectA3, objectA4]
+        criterion = Criterion('popularity', lambda x:sum(x)/len(x))
+        self.assertEqual(criterion.get_value_for_list(item_list), 4)
+
     def test_callback_criterion_in_wall(self):
         self._create_model_c_objects_and_bricks()
         wall = TestBrickWall(self.bricks, criteria=(

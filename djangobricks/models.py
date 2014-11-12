@@ -56,7 +56,7 @@ class Criterion(object):
         if items and self.callback is not None and callable(self.callback):
             # This is needed to avoid ValueError for some callback that can
             # not receive an empty list, like max()
-            return self.callback((self.get_value_for_item(i) for i in items))
+            return self.callback([self.get_value_for_item(i) for i in items])
         return callable(self.default) and self.default() or self.default
 
 
@@ -83,7 +83,7 @@ class BaseBrick(object):
         """Returns a list of bricks from the given queryset."""
         raise NotImplementedError
 
-    def get_context(self):
+    def get_context(self, **kwargs):
         """Returns the context to be passed on to the template."""
         return {}
 
@@ -107,7 +107,7 @@ class SingleBrick(BaseBrick):
         """
         return (cls(i) for i in queryset)
 
-    def get_context(self):
+    def get_context(self, **kwargs):
         """
         Returns the context to be passed on to the template.
         By default, it returns a dictionary instance with an *object* key
@@ -142,7 +142,7 @@ class ListBrick(BaseBrick):
         return [cls(i) for i in (items[i:i+cls.chunk_size]
                                  for i in xrange(0, count, cls.chunk_size))]
 
-    def get_context(self):
+    def get_context(self, **kwargs):
         """
         Returns the context to be passed on to the template.
         By default, it returns a dictionary instance with an *object_list*
