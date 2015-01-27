@@ -18,7 +18,17 @@ tricky.
 The :doc:`usage` will guide you through a complete tutorial to explain the
 concepts behind Bricks and to show how simple can be to achieve that goal.
 
-Contents:
+Requirements
+------------
+
+========  ======
+Python 2  >= 2.6
+Python 3  >= 3.2
+Django    >= 1.5
+========  ======
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
@@ -27,10 +37,10 @@ Contents:
    usage
    advanced_usage
    api
+   changelog
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`search`
-

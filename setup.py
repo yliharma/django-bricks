@@ -23,7 +23,7 @@ packages = [APP_NAME] + [i % APP_NAME for i in PACKAGES]
 setup(
     name=APP_NAME,
     version="%s.%s" % __import__(APP_NAME).VERSION[:2],
-    packages=packages, 
+    packages=packages,
     package_data={APP_NAME: data_files},
     description = 'Heterogeneous models sorting',
     author = 'Germano Guerrini',

@@ -17,7 +17,7 @@ base for out example:
 .. code-block:: python
 
     from django.db import models
-    
+
     class News(models.Model):
         title = models.CharField()
         text = models.TextField()
@@ -154,12 +154,12 @@ We are almost there! All we have to do is to create our wall in the view:
             (CRITERION_PUB_DATE, SORTING_DESC),
         )
         last_content_wall = HomepageWallFactory(last_content_criteria)
-        
+
         most_commented_criteria = (
             (CRITERION_COMMENT_COUNT, SORTING_DESC),
         )
         most_commented_content_wall = HomepageWallFactory(most_commented_criteria)
-        
+
         context = {
             'last_content_wall': last_content_wall,
             'most_commented_content_wall: most_commented_content_wall
@@ -175,12 +175,12 @@ template:
 
 .. code-block:: html+django
 
-    {% from bricks import render_brick %}
-    
+    {% load bricks %}
+
     {% for brick in last_content_wall %}
         {% render_brick brick %}
     {% endfor%}
-    
+
     {% for brick in most_commented_content_wall %}
         {% render_brick brick %}
     {% endfor%}

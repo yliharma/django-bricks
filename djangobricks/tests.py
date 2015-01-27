@@ -1,12 +1,16 @@
+from __future__ import unicode_literals
+
 import datetime
 import os
 
 from django import get_version
-from django.utils import unittest
-from django.test import SimpleTestCase
-from django.test.utils import override_settings
 from django.db import models
 from django.template import Template, Context
+from django.test import SimpleTestCase
+from django.test.utils import override_settings
+from django.utils import unittest
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils.six.moves import range
 
 from .models import (
     SingleBrick,
@@ -18,7 +22,7 @@ from .models import (
     BaseWallFactory,
     wall_factory,
 )
-from .exceptions import TemplateNameNotFound
+from djangobricks.exceptions import TemplateNameNotFound
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -51,40 +55,43 @@ class NotABrick(object): pass
 class TestBrickWall(BaseWall): pass
 
 
+@python_2_unicode_compatible
 class TestModelA(models.Model):
     name = models.CharField(max_length=8)
     popularity = models.PositiveIntegerField()
     pub_date = models.DateTimeField()
     is_sticky = models.BooleanField(default=False)
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return self.name
 
     def callable_popularity(self):
         return self.popularity
 
 
+@python_2_unicode_compatible
 class TestModelB(models.Model):
     name = models.CharField(max_length=8)
     date_add = models.DateTimeField()
     popularity = models.PositiveIntegerField()
     is_sticky = models.BooleanField(default=False)
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return self.name
 
     def pub_date(self):
         return self.date_add
 
 
+@python_2_unicode_compatible
 class TestModelC(models.Model):
     name = models.CharField(max_length=8)
     pub_date = models.DateTimeField()
     popularity = models.PositiveIntegerField()
     is_sticky = models.BooleanField(default=False)
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return self.name
 
 
 class TestWallFactory(BaseWallFactory):
@@ -131,7 +138,7 @@ class BrickTest(SimpleTestCase):
             pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
         objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
             pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
-    
+
         self.brickA1 = SingleBrick(objectA1)
         self.brickA2 = SingleBrick(objectA2)
         self.brickA3 = SingleBrick(objectA3)
@@ -148,7 +155,7 @@ class BrickTest(SimpleTestCase):
             date_add=datetime.datetime(2008, 1, 1, 12, 0), is_sticky=True)
         objectB4 = TestModelB.objects.create(name='objectB4', popularity=7,
             date_add=datetime.datetime(2009, 1, 1, 12, 0), is_sticky=False)
-    
+
         self.brickB1 = SingleBrick(objectB1)
         self.brickB2 = SingleBrick(objectB2)
         self.brickB3 = SingleBrick(objectB3)
@@ -165,7 +172,7 @@ class BrickTest(SimpleTestCase):
             pub_date=datetime.datetime(2004, 1, 1, 12, 0), is_sticky=True)
         objectC4 = TestModelC.objects.create(name='objectC4', popularity=17,
             pub_date=datetime.datetime(2005, 1, 1, 12, 0), is_sticky=False)
-    
+
         self.brickC1 = ListBrick([objectC1, objectC2])
         self.brickC2 = ListBrick([objectC3, objectC4])
         for i in range(1, 3):
@@ -203,7 +210,7 @@ class BrickTest(SimpleTestCase):
             pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
         objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
             pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
-    
+
         bricks = SingleBrick.get_bricks_for_queryset(TestModelA.objects.all())
         wall = TestBrickWall(bricks)
         self.assertEqual(wall[0].item, objectA1)
@@ -220,7 +227,7 @@ class BrickTest(SimpleTestCase):
             pub_date=datetime.datetime(2012, 1, 1, 12, 0), is_sticky=True)
         objectA4 = TestModelA.objects.create(name='objectA4', popularity=2,
             pub_date=datetime.datetime(2013, 1, 1, 12, 0), is_sticky=False)
-    
+
         bricks = ListBrick.get_bricks_for_queryset(TestModelA.objects.all())
         wall = TestBrickWall(bricks)
         self.assertEqual(wall[0].items, [objectA1, objectA2, objectA3, objectA4])
@@ -558,11 +565,11 @@ class BrickTest(SimpleTestCase):
     def test_list_brick_chunk(self):
         now = datetime.datetime.now()
         objects = []
-        for i in xrange(12):
+        for i in range(12):
             obj = TestModelC.objects.create(name=i, popularity=i, pub_date=now)
             objects.append(obj)
         bricks = TestListBrick.get_bricks_for_queryset(TestModelC.objects.all())
-        for i in xrange(3):
+        for i in range(3):
             start = i * TestListBrick.chunk_size
             stop = start + TestListBrick.chunk_size
             self.assertEqual(bricks[i].items, objects[start:stop])

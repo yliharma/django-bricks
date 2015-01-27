@@ -1,6 +1,15 @@
+from __future__ import unicode_literals
+
 import copy
 from operator import attrgetter
 from itertools import chain
+
+from django.utils import six
+from django.utils.six.moves import range
+
+if six.PY3:
+    def cmp(a, b):
+        return (a > b) - (a < b)
 
 SORTING_ASC = 1
 SORTING_DESC = -1
@@ -140,7 +149,7 @@ class ListBrick(BaseBrick):
         # Execute the query once to avoid several OFFSET LIMIT
         items = list(queryset)
         return [cls(i) for i in (items[i:i+cls.chunk_size]
-                                 for i in xrange(0, count, cls.chunk_size))]
+                                 for i in range(0, count, cls.chunk_size))]
 
     def get_context(self, **kwargs):
         """
@@ -161,7 +170,7 @@ class BaseWall(object):
 
     It orders a list of bricks using the given criteria and can be sliced or
     iterated.
-    
+
     :param bricks: the list of bricks to sort.
     :param criteria: the list of criteria to sort the bricks by.
     """
@@ -185,7 +194,7 @@ class BaseWall(object):
         # as those might not be pickable
         obj_dict = self.__dict__.copy()
         obj_dict['_sorted'] = self.sorted
-        if obj_dict.has_key('criteria'):
+        if 'criteria' in obj_dict:
             del obj_dict['criteria']
         return obj_dict
 
@@ -208,7 +217,13 @@ class BaseWall(object):
         Lazy property that returns the list of bricks sorted by the criteria.
         """
         if not self._sorted:
-            self._sorted = sorted(self.bricks, cmp=self._cmp)
+            try:
+                # Python > 2.6
+                from functools import cmp_to_key
+                self._sorted = sorted(self.bricks, key=cmp_to_key(self._cmp))
+            except ImportError:
+                # Python <= 2.6
+                self._sorted = sorted(self.bricks, cmp=self._cmp)
         return self._sorted
 
     def filter(self, callback, operator='AND'):
@@ -282,8 +297,8 @@ class BaseWallFactory(object):
             # Do some sanity check just to help the user
             for brick, queryset in self.get_content():
                 if not issubclass(brick, BaseBrick):
-                    raise TypeError(u"Expected a BaseBrick subclass, "
-                                     "got %r instead" % brick)
+                    raise TypeError("Expected a BaseBrick subclass, "
+                                    "got %r instead" % brick)
                 yield brick, queryset
 
         bricks = (b.get_bricks_for_queryset(qs) for b, qs in content_iterator())

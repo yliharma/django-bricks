@@ -122,7 +122,7 @@ content. So let's write a brick class for our new model:
         def get_value_for_criterion(self, criterion):
             if criterion.attrname == 'pub_date':
                 return self.item.public_from_date
-            return super(PhotoGalleryBrick, self).get_value_for_criterion(criterion) 
+            return super(PhotoGalleryBrick, self).get_value_for_criterion(criterion)
 
 And that's it! Unless you are sure to cover each possible criterion, it's a good
 practice to return the value from super at least, as shown above.

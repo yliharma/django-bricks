@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
+
 from django import template
 from django.template.loader import render_to_string
 
-from ..exceptions import TemplateNameNotFound
+from djangobricks.exceptions import TemplateNameNotFound
 
 register = template.Library()
 
@@ -16,8 +18,8 @@ def render_brick(context, brick, **extra_context):
     to the brick.
     """
     if brick.template_name is None:
-        raise TemplateNameNotFound(u'%r does not define '
-                                    'any template name.' % brick.__class__)
+        raise TemplateNameNotFound('%r does not define '
+                                   'any template name.' % brick.__class__)
 
     request = context.get('request')
 
