@@ -26,6 +26,20 @@ from djangobricks.exceptions import TemplateNameNotFound
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
+# Define a noop skipIf for python 2.6
+def _skipIf(test, message=''):
+    def wrapper(method):
+        if test:
+            return lambda *args, **kwargs: None
+        else:
+            return method
+    return wrapper
+
+if hasattr(unittest, 'skipIf'):
+    skipIf = unittest.skipIf
+else:
+    skipIf = _skipIf
+
 def default():
     return 1
 
@@ -584,7 +598,7 @@ class BrickTest(SimpleTestCase):
         html = template.render(Context({'brick': brick}))
         self.assertHTMLEqual(html, 'objectA1')
 
-    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    @skipIf(get_version().startswith('1.5'), 'Django is too old')
     def test_template_tag_single_brick_template_used(self):
         obj = TestModelA.objects.create(name='objectA1', popularity=5,
             pub_date=datetime.datetime(2010, 1, 1, 12, 0), is_sticky=False)
@@ -603,7 +617,7 @@ class BrickTest(SimpleTestCase):
         html = template.render(Context({'brick': brick}))
         self.assertHTMLEqual(html, 'objectC1objectC2')
 
-    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    @skipIf(get_version().startswith('1.5'), 'Django is too old')
     def test_template_tag_list_brick_template_used(self):
         obj1 = TestModelC.objects.create(name='objectC1', popularity=20,
             pub_date=datetime.datetime(2002, 1, 1, 12, 0), is_sticky=False)
@@ -632,7 +646,7 @@ class BrickTest(SimpleTestCase):
 
     # Filtering
 
-    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    @skipIf(get_version().startswith('1.5'), 'Django is too old')
     def test_matching_filter(self):
         self._create_model_a_objects_and_bricks()
         wall = TestBrickWall(self.bricks, criteria=(
@@ -642,7 +656,7 @@ class BrickTest(SimpleTestCase):
         expected = [self.brickA1, self.brickA2, self.brickA3, self.brickA4]
         self.assertEqual(list(wall), expected)
 
-    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    @skipIf(get_version().startswith('1.5'), 'Django is too old')
     def test_matching_filter_multi_models(self):
         self._create_model_a_objects_and_bricks()
         self._create_model_b_objects_and_bricks()
@@ -661,7 +675,7 @@ class BrickTest(SimpleTestCase):
         wall = wall.filter(lambda x:False)
         self.assertEqual(list(wall), [])
 
-    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    @skipIf(get_version().startswith('1.5'), 'Django is too old')
     def test_matching_filter_multiple(self):
         self._create_model_a_objects_and_bricks()
         self._create_model_b_objects_and_bricks()
@@ -678,7 +692,7 @@ class BrickTest(SimpleTestCase):
                     self.brickB4, self.brickB3, self.brickB2, self.brickB1]
         self.assertEqual(list(wall), expected)
 
-    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    @skipIf(get_version().startswith('1.5'), 'Django is too old')
     def test_matching_filter_multiple_callback(self):
         self._create_model_a_objects_and_bricks()
         self._create_model_b_objects_and_bricks()
@@ -689,7 +703,7 @@ class BrickTest(SimpleTestCase):
         expected = [self.brickA4, self.brickA3, self.brickA2, self.brickA1]
         self.assertEqual(list(filtered_wall), expected)
 
-    @unittest.skipIf(get_version().startswith('1.5'), 'Django is too old')
+    @skipIf(get_version().startswith('1.5'), 'Django is too old')
     def test_matching_filter_multiple_callback_or(self):
         self._create_model_a_objects_and_bricks()
         self._create_model_b_objects_and_bricks()
