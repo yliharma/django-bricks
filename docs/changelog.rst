@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 1.2
+===========
+* Added support for Django 1.9 and 1.10
+* Dropper support for Django < 1.8
+
 Version 1.1
 ===========
 * Added support for Python >= 3.2
