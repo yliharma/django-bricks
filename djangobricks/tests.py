@@ -133,6 +133,8 @@ class TestWrongContentWallFactory(BaseWallFactory):
 
 @override_settings(TEMPLATE_DIRS=['%s/../tests/templates' % CURRENT_DIR])
 class BrickTest(SimpleTestCase):
+    
+    allow_database_queries = True
 
     def setUp(self):
         self.bricks = []
