@@ -22,12 +22,6 @@ def render_brick(context, brick, **extra_context):
                                    'any template name.' % brick.__class__)
 
     request = context.get('request')
-
-    if request is not None:
-        context_instance = template.RequestContext(request)
-    else:
-        context_instance = None
-
     dictionary = brick.get_context()
     dictionary.update(extra_context)
-    return render_to_string(brick.template_name, dictionary, context_instance)
+    return render_to_string(brick.template_name, dictionary, request=request)

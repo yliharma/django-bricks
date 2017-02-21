@@ -1,3 +1,5 @@
+import os
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -20,3 +22,12 @@ INSTALLED_APPS = (
     'djangobricks',
 )
 SECRET_KEY = 'sk'
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'DIRS': [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'),
+        ]
+    },
+]

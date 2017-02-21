@@ -2,13 +2,13 @@ from __future__ import unicode_literals
 
 import datetime
 import os
+import unittest
 
 from django import get_version
 from django.db import models
 from django.template import Template, Context
 from django.test import SimpleTestCase
 from django.test.utils import override_settings
-from django.utils import unittest
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.six.moves import range
 
@@ -119,6 +119,8 @@ class TestWrongContentWallFactory(BaseWallFactory):
 
 @override_settings(TEMPLATE_DIRS=['%s/../tests/templates' % CURRENT_DIR])
 class BrickTest(SimpleTestCase):
+    
+    allow_database_queries = True
 
     def setUp(self):
         self.bricks = []
