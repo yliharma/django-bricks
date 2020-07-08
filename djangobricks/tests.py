@@ -9,8 +9,22 @@ from django.db import models
 from django.template import Template, Context
 from django.test import SimpleTestCase
 from django.test.utils import override_settings
-from django.utils.encoding import python_2_unicode_compatible
-from django.utils.six.moves import range
+
+from six.moves import range
+
+try:
+    from django.utils.encoding import python_2_unicode_compatible
+except ImportError:
+    # Django > 2
+    def python_2_unicode_compatible(klass):
+        """
+        A decorator that defines __unicode__ and __str__ methods under Python 2.
+        Under Python 3 it does nothing.
+
+        To support Python 2 and 3 with a single code base, define a __str__ method
+        returning text and apply this decorator to the class.
+        """
+        return klass
 
 from .models import (
     SingleBrick,

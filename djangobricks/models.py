@@ -4,8 +4,8 @@ import copy
 from operator import attrgetter
 from itertools import chain
 
-from django.utils import six
-from django.utils.six.moves import range
+import six
+from six.moves import range
 
 if six.PY3:
     def cmp(a, b):

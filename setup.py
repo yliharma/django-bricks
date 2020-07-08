@@ -29,6 +29,7 @@ setup(
     author = 'Germano Guerrini',
     author_email = 'germano.guerrini@gmail.com',
     url = 'https://github.com/GermanoGuerrini/django-bricks',
+    install_requires=['six'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
